@@ -29,7 +29,7 @@ export function App() {
 
     // Fallback if all predefined colors are used: pick based on options.length
     if (!assignedColor) {
-      assignedColor = COLORS[options.length % COLORS.length];
+      assignedColor = COLORS.find((c) => c !== options[0]?.color && c !== options[options.length - 1]?.color) ?? COLORS[0];
     }
 
     const newOption: Option = {
