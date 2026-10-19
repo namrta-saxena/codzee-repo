@@ -5,7 +5,10 @@ import { OptionInput } from './components/OptionInput';
 import { Wheel } from './components/Wheel';
 import confetti from 'canvas-confetti';
 
-const COLORS = ['#FF5733', '#33FF57', '#3357FF', '#F3FF33', '#FF33F3', '#33FFF3'];
+const COLORS = [
+  '#FF5733', '#33FF57', '#3357FF', '#F3FF33', '#FF33F3', '#33FFF3',
+  '#FF8333', '#8333FF', '#33FF83', '#FF3383' // Added a few more for safety
+];
 
 export function App() {
   const [options, setOptions] = useState<Option[]>([
@@ -18,11 +21,23 @@ export function App() {
   const [winner, setWinner] = useState<Option | null>(null);
 
   const handleAddOption = (text: string) => {
+    // Find colors already in use
+    const usedColors = new Set(options.map((opt) => opt.color));
+
+    // Pick the first color from COLORS that is NOT currently used
+    let assignedColor = COLORS.find((color) => !usedColors.has(color));
+
+    // Fallback if all predefined colors are used: pick based on options.length
+    if (!assignedColor) {
+      assignedColor = COLORS.find((c) => c !== options[0]?.color && c !== options[options.length - 1]?.color) ?? COLORS[0];
+    }
+
     const newOption: Option = {
       id: Date.now().toString(),
       text,
-      color: COLORS[options.length % COLORS.length],
+      color: assignedColor,
     };
+
     setOptions([...options, newOption]);
     setWinner(null);
   };
@@ -38,7 +53,6 @@ export function App() {
     setIsSpinning(true);
     setWinner(null);
 
-    // Random extra full rotations (3 to 6 rounds) + random degree slice
     const randomExtraDegrees = Math.floor(Math.random() * 360) + 1440;
     const newRotation = rotation + randomExtraDegrees;
     setRotation(newRotation);
@@ -46,7 +60,6 @@ export function App() {
     setTimeout(() => {
       setIsSpinning(false);
 
-      // Calculate winning slice based on final normalized angle
       const normalizedDegree = 360 - (newRotation % 360);
       const sliceAngle = 360 / options.length;
       const winningIndex = Math.floor(normalizedDegree / sliceAngle) % options.length;
@@ -54,13 +67,12 @@ export function App() {
       const winningOption = options[winningIndex];
       setWinner(winningOption);
 
-      // Trigger confetti
       confetti({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 },
       });
-    }, 4000); // Matches CSS duration
+    }, 4000);
   };
 
   return (
